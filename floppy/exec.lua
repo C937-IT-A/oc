@@ -1,7 +1,10 @@
 print("Please wait...")
 
+local needsRestart = false
 local comp = require("component")
 local event = require("event")
+local fs = require("filesystem")
+local serial = require("serialization")
 
 local gpu = comp.gpu or error("You're not gonna see this anyway")
 local geo = comp.geolyzer or error("Geolyzer peripheral not found")
@@ -31,7 +34,7 @@ term.clear()
 -- make toolbar & propagate information & buttons
 gpu.setbackground(0xd6d6d6)
 gpu.setForeground(0x000000)
-gpu.fill(1, 1, resX, 2, " ")
+gpu.fill(1, 1, resX, 2, " ") -- toolbar
 gpu.set(1, 1, "GEOLOGICAL SECURITY APPLICATION")
 gpu.set(1, 2, "R.B.C. CYBER; ARR @3/11/2025")
 gpu.setBackground(0xff0000)
@@ -63,5 +66,57 @@ end
 
 setStatus("READY", 0x00ff0e)
 
+
+
 -- MAIN --
--- TODO lol
+
+
+repeat
+    local _, _, x, y = event.pull("touch") -- possible breakpoint
+    if x == termLocX and y == termLocY then
+        -- closed program
+        gpu.setBackground(0xff0000)
+        gpu.setForeground(0x000000)
+        term.clear()
+        return
+    elseif x == scanLocX and y == scanLocY then
+        -- requested scan
+
+    elseif x == compLocX and y == compLocY then
+        -- requested compare
+        local success = pcall(function() --uncomment me when i'm working right!
+            local lastScan = io.open("/geoinfo/lastScan.bdat")
+            local statusQuo
+            local discrep
+            local sQlS;local lSlS
+            local lineLen = io.read("*l").len()
+            for line in temp:lines() do
+                lastScan = io.open("/geoinfo/lastScan.bdat")
+                fs:seek("set", (lineLen * line))
+                lSlS = serial.unserialize(io.read("*l"))
+                io.flush()
+                statusQuo = io.open("/geoinfo/statusQuo.bdat")
+                fs:seek("set", (lineLen * line))
+                sQlS = serial.unserialize(io.read("*l"))
+                io.flush()
+                local diff = []
+                for i,v in pairs(lSlS) do
+                    table.insert(diff, sQlS[i] - v)
+                end
+                discrep = io.open("/geoinfo/discrep.bdat", "a")
+                discrep:write(serial.serialize(diff))
+                io.flush()
+            end
+        --if not success then setStatus("ERROR", 0xFF0000);needsRestart = true end
+    elseif x == sqLocX and y == sqLocY then
+        -- requested set SQ
+        --local success = pcall(function() --uncomment me when i'm working right!
+            setStatus("WORKING", 0xf2ff00)
+            fs.copy("/geoinfo/lastScan.bdat", "/geoinfo/statusQuo.bdat")
+            setStatus("READY", 0x00ff0e)
+        --end)
+        --if not success then setStatus("ERROR", 0xFF0000);needsRestart = true end
+    end
+until needsRestart
+os.sleep(2)
+term.clear()
