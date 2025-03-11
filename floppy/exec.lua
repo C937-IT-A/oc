@@ -1,6 +1,7 @@
 print("Please wait...")
 
 local comp = require("component")
+local event = require("event")
 
 local gpu = comp.gpu or error("You're not gonna see this anyway")
 local geo = comp.geolyzer or error("Geolyzer peripheral not found")
