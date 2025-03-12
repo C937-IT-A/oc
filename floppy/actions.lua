@@ -5,7 +5,7 @@ local inp = io.read("*l").lower().sub(1,1)
 if inp == "o" then
     os.execute("/geolib/exec.lua")
 elseif inp == "u" then
-    fs.umount("/geolib") -- possible breakpoint
+    fs.umount("/geolib") -- possible breakpoint; idk how to mount
     print("Uninstallation protocol complete. Removal of GEO floppy permissible.")
-    fs.remove("manGeo.lua") -- possible breakpoint
+    fs.remove("manGeo.lua") -- possible breakpoint; can a file remove itself?
 end

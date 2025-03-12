@@ -8,6 +8,7 @@ local serial = require("serialization")
 
 local gpu = comp.gpu or error("You're not gonna see this anyway")
 local geo = comp.geolyzer or error("Geolyzer peripheral not found")
+local CC = component.computer
 
 term.clear()
 
@@ -72,11 +73,12 @@ setStatus("READY", 0x00ff0e)
 
 
 repeat
-    local _, _, x, y = event.pull("touch") -- possible breakpoint
+    local _, _, x, y = event.pull("touch") -- possible breakpoint; is this how you get clicks?
     if x == termLocX and y == termLocY then
         -- closed program
         gpu.setBackground(0xff0000)
         gpu.setForeground(0x000000)
+        CC.beep(800, .5);os.sleep(.5);CC.beep(600, .5);os.sleep(.5);CC.beep(400, .5)
         term.clear()
         return
     elseif x == scanLocX and y == scanLocY then
@@ -84,13 +86,21 @@ repeat
 
     elseif x == compLocX and y == compLocY then
         -- requested compare
-        local success = pcall(function() --uncomment me when i'm working right!
-            local lastScan = io.open("/geoinfo/lastScan.bdat")
-            local statusQuo
-            local discrep
+        --local success = pcall(function() --uncomment me when i'm working right!
+            setStatus("WORKING", 0xf2ff00)
+            CC.beep(400, 1)
+            local lastScan = io.open("/geoinfo/lastScan.bdat") --last scan made, read
+            local statusQuo --scan considered the normal state, read
+            local discrep --stores mathematical difference between the two files, append
             local sQlS;local lSlS
-            local lineLen = io.read("*l").len()
-            for line in temp:lines() do
+            local lineLen = io.read("*l").len() --unit length of one line used for fs:seek parameter.
+            io.flush()
+            local currX = 1;local currY = 1
+            local printX = 3; local printY = 3
+            local baseX = printX;local baseY = printY
+            local width = tonumber(io.open("settings/scanW.cf"):read("*a");io.flush()) -- possible breakpoints; can i read directly from an io.open or does it need to be localized?
+            local depth = tonumber(io.open("settings/scanD.cf"):read("*a");io.flush())
+            for line in temp:lines() do -- possible breakpoint; RAM allocation. might require a whole-ass server... actually that seems reasonable. scalability issues but whaddeva!
                 lastScan = io.open("/geoinfo/lastScan.bdat")
                 fs:seek("set", (lineLen * line))
                 lSlS = serial.unserialize(io.read("*l"))
@@ -100,23 +110,78 @@ repeat
                 sQlS = serial.unserialize(io.read("*l"))
                 io.flush()
                 local diff = []
+                local flag = false
                 for i,v in pairs(lSlS) do
+                    if sQlS[i] - v > 0 then flag = "lR" elseif sQlS[i] - v < 0 then if flag ~= "lR" then flag = "hR" end end
                     table.insert(diff, sQlS[i] - v)
+                    if v <= 0 and sQlS[i] - v ~= 0 then flag = "AIR" end
+                end
+                if flag then
+                    -- discrepancy in current column
+                    if flag == "lR" then
+                        -- new column contains blocks with less breakforce than previous but not air
+                        gpu.setBackground(0xFFFF00)
+                        gpu.set(printX, printY, "?")
+                    elseif flag == "hR" then
+                        -- new column contains blocks with more breakforce than previous
+                        gpu.setBackground(0x0000FF)
+                        gpu.set(printX, printY, " ")
+                    elseif flag == "AIR" then
+                        -- new column contains air that was not previously there
+                        gpu.setBackground(0xFF0000)
+                        gpu.set(printX, printY, "!")
+                    end
+                else
+                    -- no discrepancy in current column
+                    gpu.setBackground(0xFFFFFF)
+                    gpu.set(printX, printY, " ")
                 end
                 discrep = io.open("/geoinfo/discrep.bdat", "a")
                 discrep:write(serial.serialize(diff))
                 io.flush()
+                --so... okay.
+                --the discrep file stores column data in (X by Y in i) format. first line
+                --is X1Y1i1, second is X2Y1i2, and so on incrementing X until width is reached,
+                --at which point X resets to 1 and Y increments by 1. if Y has reached depth,
+                --the loop breaks as the compare is finished.
+                if currX >= width then
+                    if currY < depth then
+                        currY = currY + 1 -- increment Y
+                        currX = 1 -- reset X
+                        printX = baseX
+                        printY = printY + 1
+                    else
+                        break -- all columns accounted for; break loop
+                    end
+                else
+                    currX = currX + 1 -- increment X
+                    printX = printX + 1
+                end
             end
-        --if not success then setStatus("ERROR", 0xFF0000);needsRestart = true end
+            setStatus("READY", 0x00ff0e)
+            CC.beep(700, .75)
+        --end)
+        --if not success then setStatus("ERROR; PRESS ENTER", 0xFF0000);needsRestart = true end
     elseif x == sqLocX and y == sqLocY then
         -- requested set SQ
         --local success = pcall(function() --uncomment me when i'm working right!
             setStatus("WORKING", 0xf2ff00)
+            CC.beep(400, 1)
             fs.copy("/geoinfo/lastScan.bdat", "/geoinfo/statusQuo.bdat")
             setStatus("READY", 0x00ff0e)
+            CC.beep(700, .75)
         --end)
-        --if not success then setStatus("ERROR", 0xFF0000);needsRestart = true end
+        --if not success then setStatus("ERROR; PRESS ENTER", 0xFF0000);needsRestart = true end
     end
 until needsRestart
-os.sleep(2)
-term.clear()
+io.flush()
+local corbeep = coroutine.create(function()
+    repeat
+        CC.beep(1000, .5)
+        os.sleep(.75)
+    until nil
+end)
+coroutine.resume(corbeep)
+io.read("*l") -- wait for any input
+coroutine.close(corbeep)
+term.clear() -- clear program
