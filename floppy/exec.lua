@@ -71,7 +71,7 @@ setStatus("READY", 0x00ff0e)
 
 -- MAIN --
 
-
+-- mysterious goonfish from the realm of shart
 repeat
     local _, _, x, y = event.pull("touch") -- possible breakpoint; is this how you get clicks?
     if x == termLocX and y == termLocY then
@@ -83,7 +83,39 @@ repeat
         return
     elseif x == scanLocX and y == scanLocY then
         -- requested scan
+        --local success = pcall(function() --uncomment me when i'm working right!
+            setStatus("WORKING", 0xf2ff00)
+            local width = tonumber(io.open("settings/scanW.cf"):read("*a"));io.flush() -- possible breakpoints; can i read directly from an io.open or does it need to be localized?
+            local depth = tonumber(io.open("settings/scanD.cf"):read("*a"));io.flush()
+            local height = tonumber(io.open("settings/scanH.cf"):read("*a"));io.flush()
+            local offX = tonumber(io.open("settings/scanX.cf"):read("*a")) - 1;io.flush()
+            local offY = tonumber(io.open("settings/scanY.cf"):read("*a"));io.flush()
+            local offZ = tonumber(io.open("settings/scanZ.cf"):read("*a")) - 1;io.flush()
 
+            io.open("/geoinfo/lastScan.bdat", "w");io.flush()
+            local lSF = io.open("/geoinfo/lastScan.bdat", "a")
+
+            local currX = 1
+            local currZ = 1
+
+            repeat -- possible breakpoint; RAM allocation. might require a whole-ass server... actually that seems reasonable. scalability issues but whaddeva!
+                local columnData = geo.scan(offX + currX, offZ + currZ, offY, 1, 1, height)
+                lSF:write(serial.serialize(columnData))
+                if currX >= width then
+                    if currZ < depth then
+                        currZ = currZ + 1
+                        currX = 1
+                    else
+                        break
+                    end
+                else
+                    currX = currX + 1
+                end
+            until nil
+            io.flush()
+            setStatus("READY", 0xf2ff00)
+        --end)
+        --if not success then setStatus("ERROR; PRESS ENTER", 0xFF0000);needsRestart = true end
     elseif x == compLocX and y == compLocY then
         -- requested compare
         --local success = pcall(function() --uncomment me when i'm working right!
@@ -98,8 +130,8 @@ repeat
             local currX = 1;local currY = 1
             local printX = 3; local printY = 3
             local baseX = printX;local baseY = printY
-            local width = tonumber(io.open("settings/scanW.cf"):read("*a");io.flush()) -- possible breakpoints; can i read directly from an io.open or does it need to be localized?
-            local depth = tonumber(io.open("settings/scanD.cf"):read("*a");io.flush())
+            local width = tonumber(io.open("settings/scanW.cf"):read("*a"));io.flush() -- possible breakpoints; can i read directly from an io.open or does it need to be localized?
+            local depth = tonumber(io.open("settings/scanD.cf"):read("*a"));io.flush()
             for line in temp:lines() do -- possible breakpoint; RAM allocation. might require a whole-ass server... actually that seems reasonable. scalability issues but whaddeva!
                 lastScan = io.open("/geoinfo/lastScan.bdat")
                 fs:seek("set", (lineLen * line))
@@ -182,6 +214,6 @@ local corbeep = coroutine.create(function()
     until nil
 end)
 coroutine.resume(corbeep)
-io.read("*l") -- wait for any input
+io.read("*l") -- wait for enter pressed
 coroutine.close(corbeep)
 term.clear() -- clear program
