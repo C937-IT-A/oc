@@ -92,7 +92,7 @@ repeat
             local offY = tonumber(io.open("settings/scanY.cf"):read("*a"));io.flush()
             local offZ = tonumber(io.open("settings/scanZ.cf"):read("*a")) - 1;io.flush()
 
-            io.open("/geoinfo/lastScan.bdat", "w");io.flush()
+            io.open("/geoinfo/lastScan.bdat", "w");io.flush() -- clears the shigglegart file
             local lSF = io.open("/geoinfo/lastScan.bdat", "a")
 
             local currX = 1
@@ -132,7 +132,10 @@ repeat
             local baseX = printX;local baseY = printY
             local width = tonumber(io.open("settings/scanW.cf"):read("*a"));io.flush() -- possible breakpoints; can i read directly from an io.open or does it need to be localized?
             local depth = tonumber(io.open("settings/scanD.cf"):read("*a"));io.flush()
-            for line in temp:lines() do -- possible breakpoint; RAM allocation. might require a whole-ass server... actually that seems reasonable. scalability issues but whaddeva!
+            
+            lastScan = io.open("/geoinfo/lastScan.bdat")
+            
+            for line in lastScan:lines() do -- possible breakpoint; RAM allocation. might require a whole-ass server... actually that seems reasonable. scalability issues but whaddeva!
                 lastScan = io.open("/geoinfo/lastScan.bdat")
                 fs:seek("set", (lineLen * line))
                 lSlS = serial.unserialize(io.read("*l"))
