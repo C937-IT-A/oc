@@ -9,3 +9,9 @@ windowed execution will generate a toolbar
     will also generate a sidebar on the left
     that houses program-specific actions
 
+settings scan dimension files should contain only one number and nothing but one number
+
+requires non-monochrome graphics & screen
+
+works best at high resolution
+

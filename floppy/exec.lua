@@ -1,6 +1,7 @@
 print("Please wait...")
 
 local needsRestart = false
+local exitCode = "1"
 
 -- fundamentals
 local comp = require("component")
@@ -11,7 +12,7 @@ local serial = require("serialization")
 -- componentry
 local gpu = comp.gpu or error("You're not gonna see this anyway")
 local geo = comp.geolyzer or error("Geolyzer peripheral not found")
-local CC = component.computer
+local CC = component.computer or error("Surely not...")
 
 term.clear()
 
@@ -37,25 +38,31 @@ os.sleep(.25)
 term.clear()
 
 -- make toolbar & propagate information & buttons
-gpu.setbackground(0xd6d6d6)
-gpu.setForeground(0x000000)
-gpu.fill(1, 1, resX, 2, " ") -- toolbar
-gpu.set(1, 1, "GEOLOGICAL SECURITY APPLICATION") -- title
-gpu.set(1, 2, "R.B.C. CYBER; ARR @3/11/2025") -- cc info
-gpu.setBackground(0xff0000)
-gpu.setForeground(0xffffff)
-gpu.set(termLocX, termLocY, "X") -- termination button
 gpu.setBackground(0xacedff)
-gpu.fill(1, 3, resX, resY-2, " ") -- main area
-gpu.setBackground(0x8f8f8f)
-gpu.fill(1, 3, 2, resY-2, " ") -- side bar
-gpu.setBackground(0x00ff0e)
-gpu.set(scanLocX, scanLocY, "+") -- scan button
-gpu.setBackground(0x9300ff)
-gpu.set(compLocX, compLocY, "=") -- compare button
-gpu.setBackground(0xf2ff00)
-gpu.set(sqLocX, sqLocY, "~") -- status quo button
-
+gpu.fill(1, 1, resX, resY, " ") -- main area
+local function propagateInformation()
+    gpu.setbackground(0xd6d6d6)
+    gpu.setForeground(0x000000)
+    gpu.fill(1, 1, resX, 2, " ") -- toolbar
+    gpu.set(1, 1, "GEOLOGICAL SECURITY APPLICATION") -- title
+    gpu.set(1, 2, "R.B.C. CYBER; ARR @3/11/2025") -- cc info
+    gpu.setBackground(0xff0000)
+    gpu.setForeground(0xffffff)
+    gpu.set(termLocX, termLocY, "X") -- termination button
+    gpu.setBackground(0x8f8f8f)
+    gpu.fill(1, 3, 2, resY-2, " ") -- side bar
+    gpu.setBackground(0x00ff0e)
+    gpu.set(scanLocX, scanLocY, "+") -- scan button
+    gpu.setBackground(0x9300ff)
+    gpu.set(compLocX, compLocY, "=") -- compare button
+    gpu.setBackground(0xf2ff00)
+    gpu.set(sqLocX, sqLocY, "~") -- status quo button
+end
+local function depropagateInformation()
+    gpu.setBackground(0xacedff)
+    gpu.fill(1, 3, resX, resY, " ") -- main area
+end
+propagateInformation()
 local lastMSGlen = 0
 local function setStatus(status, clr) -- sets status message
     local prevBKG = gpu.getBackground()
@@ -69,7 +76,7 @@ local function setStatus(status, clr) -- sets status message
     gpu.setForeground(prevFRG)
 end
 
-setStatus("READY", 0x00ff0e)
+setStatus("READY", 0xf2ff00)
 
 -- MAIN --
 
@@ -77,6 +84,7 @@ repeat
     local _, _, x, y = event.pull("touch") -- possible breakpoint; is this how you get clicks?
     if x == termLocX and y == termLocY then
         -- closed program
+        depropagateInformation()
         gpu.setBackground(0x000000)
         gpu.setForeground(0xffffff)
         CC.beep(800, .5);os.sleep(.5);CC.beep(600, .5);os.sleep(.5);CC.beep(400, .5)
@@ -86,6 +94,7 @@ repeat
     elseif x == scanLocX and y == scanLocY then
         -- requested scan
         local success = pcall(function() --uncomment me when i'm working right!
+            depropagateInformation()
             setStatus("WORKING", 0xf2ff00)
             CC.beep(400, 1)
             local width = tonumber(io.open("settings/scanW.cf"):read("*a"));io.flush() -- possible breakpoints; can i read directly from an io.open or does it need to be localized?
@@ -104,6 +113,8 @@ repeat
             repeat -- possible breakpoint; RAM allocation. might require a whole-ass server... actually that seems reasonable. scalability issues but whaddeva!
                 local columnData = geo.scan(offX + currX, offZ + currZ, offY, 1, 1, height)
                 lSF:write(serial.serialize(columnData))
+                gpu.setBackground(0xf2ff00)
+                gpu.set(currX, currZ, " ")
                 if currX >= width then
                     if currZ < depth then
                         currZ = currZ + 1
@@ -116,15 +127,33 @@ repeat
                 end
             until nil
             io.flush()
-            setStatus("READY", 0xf2ff00)
+            setStatus("READY; PRESS ENTER", 0xf2ff00)
             CC.beep(700, .75)
+            coroutine.resume(coroutine.create(function()) -- possible breakpoint
+                io.read("*l")
+                propagateInformation()
+                setStatus("READY", 0xf2ff00)
+            end)
         end)
         if not success then setStatus("ERROR; PRESS ENTER", 0xFF0000);needsRestart = true end
     elseif x == compLocX and y == compLocY then
         -- requested compare
         local success = pcall(function() --uncomment me when i'm working right!
+            depropagateInformation()
             setStatus("WORKING", 0xf2ff00)
             CC.beep(400, 1)
+            if not fs.exists("/geoinfo/lastScan.bdat") then
+                setStatus("ERROR; PRESS ENTER", 0xFF0000)
+                exitCode = "2"
+                needsRestart = true
+                break
+            end
+            if not fs.exists("/geoinfo/statusQuo.bdat") then
+                setStatus("ERROR; PRESS ENTER", 0xFF0000)
+                exitCode = "2"
+                needsRestart = true
+                break
+            end
             local lastScan = io.open("/geoinfo/lastScan.bdat") --last scan made, read
             local statusQuo --scan considered the normal state, read
             local discrep --stores mathematical difference between the two files, append
@@ -197,16 +226,45 @@ repeat
                     printX = printX + 1
                 end
             end
-            setStatus("READY", 0x00ff0e)
+            io.flush()
+            setStatus("READY; PRESS ENTER", 0xf2ff00)
             CC.beep(700, .75)
+            coroutine.resume(coroutine.create(function()) -- possible breakpoint
+                io.read("*l")
+                propagateInformation()
+                setStatus("READY", 0xf2ff00)
+            end)
         end)
         if not success then setStatus("ERROR; PRESS ENTER", 0xFF0000);needsRestart = true end
     elseif x == sqLocX and y == sqLocY then
         -- requested set SQ
         local success = pcall(function() --uncomment me when i'm working right!
+            propagateInformation()
             setStatus("WORKING", 0xf2ff00)
             CC.beep(400, 1)
+            gpu.setForeground(0xffffff)
+            if fs.exists("/geoinfo/lastScan.bdat") then
+                gpu.set(3, 3, "Found lastScan.bdat")
+            else
+                setStatus("ERROR; PRESS ENTER", 0xFF0000)
+                exitCode = "2"
+                needsRestart = true
+                break
+            end
+            if fs.exists("/geoinfo/statusQuo.bdat") then
+                gpu.set(3, 4, "Found statusQuo.bdat")
+            else
+                setStatus("ERROR; PRESS ENTER", 0xFF0000)
+                exitCode = "2"
+                needsRestart = true
+                break
+            end
+            gpu.set(3, 5, "Copying...")
             fs.copy("/geoinfo/lastScan.bdat", "/geoinfo/statusQuo.bdat")
+            gpu.set(5, 6, "lastScan.bdat >> statusQuo.bdat")
+            local fsize = tostring(fs.size("/geoinfo/lastScan.bdat") / 1000)
+            io.open("/geoinfo/lastScan.bdat", "w");io.flush() -- clears lastScan.bdat
+            gpu.set(5, 7, "lastScan.bdat cleared: saved " .. fsize .. " KB")
             setStatus("READY", 0x00ff0e)
             CC.beep(700, .75)
         end)
@@ -226,4 +284,4 @@ coroutine.resume(corbeep)
 io.read("*l") -- wait for enter pressed
 coroutine.close(corbeep)
 term.clear() -- clear program
-print("GEOSEC exited with code 1; unknown error.\nDiagnose by removing pcall safeguard from section you were using, replicating conditions, & observing issue at root.")
+print("GEOSEC exited with code " .. exitCode .. "; error.\nDiagnose by removing pcall safeguard from section you were using, replicating conditions, & observing issue at root.")
