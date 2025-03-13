@@ -22,14 +22,15 @@ if not success then error("Your system's specifications do not meet the minimum 
 gpu.setForeground(0xffee00)
 print("Color depth verified")
 
+-- determine GPU resolution for rendering calculations
 local resX, resY = gpu.getResolution()
 print("GPU resolution found")
 
+-- determine button locations to compare against click locations
 local termLocX = resX; local termLocY = 1 -- location of X button that exits program. MUST be on toolbar!
 local scanLocX = 1; local scanLocY = 4 -- location of scan button. should be on sidebar, must NOT be in main!
 local compLocX = 1; local compLocY = 6 -- location of compare button. should be on sidebar, must NOT be in main!
 local sqLocX = 1; local sqLocY = 8 -- location of button that sets status quo. should be on sidebar, must NOT be in main!
-
 print("Button locations defined")
 
 os.sleep(.25)
@@ -39,8 +40,8 @@ term.clear()
 gpu.setbackground(0xd6d6d6)
 gpu.setForeground(0x000000)
 gpu.fill(1, 1, resX, 2, " ") -- toolbar
-gpu.set(1, 1, "GEOLOGICAL SECURITY APPLICATION")
-gpu.set(1, 2, "R.B.C. CYBER; ARR @3/11/2025")
+gpu.set(1, 1, "GEOLOGICAL SECURITY APPLICATION") -- title
+gpu.set(1, 2, "R.B.C. CYBER; ARR @3/11/2025") -- cc info
 gpu.setBackground(0xff0000)
 gpu.setForeground(0xffffff)
 gpu.set(termLocX, termLocY, "X") -- termination button
@@ -61,7 +62,7 @@ local function setStatus(status, clr) -- sets status message
     local prevFRG = gpu.getForeground()
     gpu.setBackground(0xd6d6d6)
     gpu.setForeground(clr)
-    gpu.fill(resX - lastMSGlen, 2, lastMSGlen, 1, " ") -- clear last message
+    gpu.fill(resX - lastMSGlen, 2, resX, 1, " ") -- clear last message
     gpu.set(resX - status.len(), 2, status) -- set new message
     lastMSGlen = status.len()
     gpu.setBackground(prevBKG)
@@ -70,24 +71,21 @@ end
 
 setStatus("READY", 0x00ff0e)
 
-
-
 -- MAIN --
 
--- mysterious goonfish from the realm of shart
 repeat
     local _, _, x, y = event.pull("touch") -- possible breakpoint; is this how you get clicks?
     if x == termLocX and y == termLocY then
         -- closed program
-        gpu.setBackground(0xff0000)
-        gpu.setForeground(0x000000)
+        gpu.setBackground(0x000000)
+        gpu.setForeground(0xffffff)
         CC.beep(800, .5);os.sleep(.5);CC.beep(600, .5);os.sleep(.5);CC.beep(400, .5)
         term.clear()
         print("Exited GEOSEC with code 0; successful user-initiated shutdown.")
         return
     elseif x == scanLocX and y == scanLocY then
         -- requested scan
-        --local success = pcall(function() --uncomment me when i'm working right!
+        local success = pcall(function() --uncomment me when i'm working right!
             setStatus("WORKING", 0xf2ff00)
             CC.beep(400, 1)
             local width = tonumber(io.open("settings/scanW.cf"):read("*a"));io.flush() -- possible breakpoints; can i read directly from an io.open or does it need to be localized?
@@ -120,11 +118,11 @@ repeat
             io.flush()
             setStatus("READY", 0xf2ff00)
             CC.beep(700, .75)
-        --end)
-        --if not success then setStatus("ERROR; PRESS ENTER", 0xFF0000);needsRestart = true end
+        end)
+        if not success then setStatus("ERROR; PRESS ENTER", 0xFF0000);needsRestart = true end
     elseif x == compLocX and y == compLocY then
         -- requested compare
-        --local success = pcall(function() --uncomment me when i'm working right!
+        local success = pcall(function() --uncomment me when i'm working right!
             setStatus("WORKING", 0xf2ff00)
             CC.beep(400, 1)
             local lastScan = io.open("/geoinfo/lastScan.bdat") --last scan made, read
@@ -201,18 +199,18 @@ repeat
             end
             setStatus("READY", 0x00ff0e)
             CC.beep(700, .75)
-        --end)
-        --if not success then setStatus("ERROR; PRESS ENTER", 0xFF0000);needsRestart = true end
+        end)
+        if not success then setStatus("ERROR; PRESS ENTER", 0xFF0000);needsRestart = true end
     elseif x == sqLocX and y == sqLocY then
         -- requested set SQ
-        --local success = pcall(function() --uncomment me when i'm working right!
+        local success = pcall(function() --uncomment me when i'm working right!
             setStatus("WORKING", 0xf2ff00)
             CC.beep(400, 1)
             fs.copy("/geoinfo/lastScan.bdat", "/geoinfo/statusQuo.bdat")
             setStatus("READY", 0x00ff0e)
             CC.beep(700, .75)
-        --end)
-        --if not success then setStatus("ERROR; PRESS ENTER", 0xFF0000);needsRestart = true end
+        end)
+        if not success then setStatus("ERROR; PRESS ENTER", 0xFF0000);needsRestart = true end
     end
 until needsRestart
 io.flush()
