@@ -1,11 +1,14 @@
 print("Please wait...")
 
 local needsRestart = false
+
+-- fundamentals
 local comp = require("component")
 local event = require("event")
 local fs = require("filesystem")
 local serial = require("serialization")
 
+-- componentry
 local gpu = comp.gpu or error("You're not gonna see this anyway")
 local geo = comp.geolyzer or error("Geolyzer peripheral not found")
 local CC = component.computer
@@ -44,7 +47,10 @@ gpu.set(termLocX, termLocY, "X") -- termination button
 gpu.setBackground(0xacedff)
 gpu.fill(1, 3, resX, resY-2, " ") -- main area
 gpu.setBackground(0x8f8f8f)
+gpu.setForeground(0x023020)
 gpu.fill(1, 3, 2, resY-2, " ") -- side bar
+gpu.set(1, resY - 1, "XY")
+gpu.set(1, resY, "??")
 gpu.setBackground(0x00ff0e)
 gpu.set(scanLocX, scanLocY, "+") -- scan button
 gpu.setBackground(0x9300ff)
