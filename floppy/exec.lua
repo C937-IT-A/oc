@@ -34,6 +34,9 @@ local compLocX = 1; local compLocY = 6 -- location of compare button. should be 
 local sqLocX = 1; local sqLocY = 8 -- location of button that sets status quo. should be on sidebar, must NOT be in main!
 print("Button locations defined")
 
+local holo = comp.hologram or nil -- optional!
+if holo then print("Hologram found") else print("Optional hologram not found") end
+
 os.sleep(.25)
 term.clear()
 
@@ -269,7 +272,7 @@ repeat
             CC.beep(700, .75)
         end)
         if not success then setStatus("ERROR; PRESS ENTER", 0xFF0000);needsRestart = true end
-    end
+    end -- use an elseif here to analyze specifics when columns are pressed
 until needsRestart
 io.flush()
 local corbeep = coroutine.create(function()
