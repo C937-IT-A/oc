@@ -47,7 +47,6 @@ gpu.set(termLocX, termLocY, "X") -- termination button
 gpu.setBackground(0xacedff)
 gpu.fill(1, 3, resX, resY-2, " ") -- main area
 gpu.setBackground(0x8f8f8f)
-gpu.setForeground(0x023020)
 gpu.fill(1, 3, 2, resY-2, " ") -- side bar
 gpu.setBackground(0x00ff0e)
 gpu.set(scanLocX, scanLocY, "+") -- scan button
