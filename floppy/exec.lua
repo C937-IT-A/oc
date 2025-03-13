@@ -83,11 +83,13 @@ repeat
         gpu.setForeground(0x000000)
         CC.beep(800, .5);os.sleep(.5);CC.beep(600, .5);os.sleep(.5);CC.beep(400, .5)
         term.clear()
+        print("Exited GEOSEC with code 0; successful user-initiated shutdown.")
         return
     elseif x == scanLocX and y == scanLocY then
         -- requested scan
         --local success = pcall(function() --uncomment me when i'm working right!
             setStatus("WORKING", 0xf2ff00)
+            CC.beep(400, 1)
             local width = tonumber(io.open("settings/scanW.cf"):read("*a"));io.flush() -- possible breakpoints; can i read directly from an io.open or does it need to be localized?
             local depth = tonumber(io.open("settings/scanD.cf"):read("*a"));io.flush()
             local height = tonumber(io.open("settings/scanH.cf"):read("*a"));io.flush()
@@ -117,6 +119,7 @@ repeat
             until nil
             io.flush()
             setStatus("READY", 0xf2ff00)
+            CC.beep(700, .75)
         --end)
         --if not success then setStatus("ERROR; PRESS ENTER", 0xFF0000);needsRestart = true end
     elseif x == compLocX and y == compLocY then
@@ -216,10 +219,13 @@ io.flush()
 local corbeep = coroutine.create(function()
     repeat
         CC.beep(1000, .5)
-        os.sleep(.75)
+        os.sleep(.5)
+        CC.beep(1200, .5)
+        os.sleep(.5)
     until nil
 end)
 coroutine.resume(corbeep)
 io.read("*l") -- wait for enter pressed
 coroutine.close(corbeep)
 term.clear() -- clear program
+print("GEOSEC exited with code 1; unknown error.\nDiagnose by removing pcall safeguard from section you were using, replicating conditions, & observing issue at root.")
