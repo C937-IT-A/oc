@@ -51,7 +51,8 @@ local compLocX = 1; local compLocY = 6 -- location of compare button. should be 
 local sqLocX = 1; local sqLocY = 8 -- location of button that sets status quo. should be on sidebar, must NOT be in main!
 print("Button locations defined")
 
-local holo = comp.hologram or nil -- optional!
+local holo -- optional!
+if comp.isAvailable("hologram") then holo = comp.hologram else holo = nil end
 local holoResX, holoResY
 if holo then print("Hologram found") else print("Optional hologram not found") end
 if holo then holoResX, holoResY = holo.getScale(); holo.clear() end -- possible breakpoint
