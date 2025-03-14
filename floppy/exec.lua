@@ -13,7 +13,7 @@ local serial = require("serialization")
 -- componentry
 local gpu = comp.gpu or error("You're not gonna see this anyway")
 local geo = comp.geolyzer or error("Geolyzer peripheral not found")
-local CC = component.computer
+local CC = comp.computer or error("Surely not...")
 
 term.clear()
 
