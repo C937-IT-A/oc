@@ -130,8 +130,7 @@ repeat
             local offY = tonumber(io.open("settings/scanY.cf"):read("*a"));io.flush()
             local offZ = tonumber(io.open("settings/scanZ.cf"):read("*a")) - 1;io.flush()
 
-            io.open("/geoinfo/lastScan.bdat", "w");io.flush() -- clears the shigglegart file
-            local lSF = io.open("/geoinfo/lastScan.bdat", "a")
+            local lSF = io.open("/geoinfo/lastScan.bdat", "w")
 
             local currX = 1
             local currZ = 1
@@ -231,7 +230,7 @@ repeat
                     gpu.setBackground(0xFFFFFF)
                     gpu.set(printX, printY, " ")
                 end
-                discrep = io.open("/geoinfo/discrep.bdat", "a")
+                discrep = io.open("/geoinfo/discrep.bdat", "w")
                 discrep:write(serial.serialize(diff))
                 io.flush()
                 --so... okay.
