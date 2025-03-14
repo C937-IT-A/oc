@@ -9,6 +9,7 @@ local comp = require("component")
 local event = require("event")
 local fs = require("filesystem")
 local serial = require("serialization")
+local term = require("term")
 
 -- componentry
 local gpu = comp.gpu or error("You're not gonna see this anyway")
