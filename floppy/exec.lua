@@ -161,7 +161,7 @@ repeat
                 io.read("*l")
                 propagateInformation()
                 setStatus("READY", 0x00ff00)
-            end))
+            end)
         end)
         if not success then setStatus("ERROR; SHUT DOWN", 0xFF0000);needsRestart = true end
     elseif x == compLocX and y == compLocY then
