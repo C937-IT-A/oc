@@ -94,8 +94,8 @@ local function setStatus(status, clr) -- sets status message
     gpu.setBackground(0xd6d6d6)
     gpu.setForeground(clr)
     gpu.fill(resX - lastMSGlen, 2, resX, 1, " ") -- clear last message
-    gpu.set(resX - status.len(), 2, status) -- set new message
-    lastMSGlen = status.len()
+    gpu.set(resX - string.len(status), 2, status) -- set new message
+    lastMSGlen = string.len(status)
     gpu.setBackground(prevBKG)
     gpu.setForeground(prevFRG)
 end
@@ -185,7 +185,7 @@ repeat
             local statusQuo --scan considered the normal state, read
             local discrep --stores mathematical difference between the two files, append
             local sQlS;local lSlS
-            local lineLen = io.read("*l").len() --unit length of one line used for fs:seek parameter.
+            local lineLen = string.len(io.read("*l")) --unit length of one line used for fs:seek parameter.
             io.flush()
             local currX = 1;local currY = 1
             local printX = 1; local printY = 3
@@ -301,7 +301,7 @@ repeat
     elseif comparing then
         io.flush()
         local discrep = io.open("/geoinfo/discrep.bdat")
-        local liq = io.read("*l").len()
+        local liq = string.len(io.read("*l"))
         fs:seek("set", (liq * x * (y - 2)))
         liq = io.read("*l")
         gpu.setForeground(0xffffff)
