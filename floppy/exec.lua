@@ -1,6 +1,7 @@
 print("Please wait...")
 
 local needsRestart = false
+local comparing = false
 local exitCode = "1"
 
 -- fundamentals
@@ -35,7 +36,10 @@ local sqLocX = 1; local sqLocY = 8 -- location of button that sets status quo. s
 print("Button locations defined")
 
 local holo = comp.hologram or nil -- optional!
+local holoResX, holoResY
 if holo then print("Hologram found") else print("Optional hologram not found") end
+if holo then holoResX, holoResY = holo.getScale(); holo.clear() end -- possible breakpoint
+if holo then holo.setPaletteColor(0xff0000, 0); holo.setPaletteColor(0x00ff00, 1); holo.setPaletteColor(0x0000ff, 2) end
 
 os.sleep(.25)
 term.clear()
@@ -92,11 +96,13 @@ repeat
         gpu.setForeground(0xffffff)
         CC.beep(800, .5);os.sleep(.5);CC.beep(600, .5);os.sleep(.5);CC.beep(400, .5)
         term.clear()
+        if holo then holo.clear() end
         print("Exited GEOSEC with code 0; successful user-initiated shutdown.")
         return
     elseif x == scanLocX and y == scanLocY then
         -- requested scan
         local success = pcall(function() --uncomment me when i'm working right!
+            if holo then holo.clear() end
             depropagateInformation()
             setStatus("WORKING", 0xf2ff00)
             CC.beep(400, 1)
@@ -142,6 +148,7 @@ repeat
     elseif x == compLocX and y == compLocY then
         -- requested compare
         local success = pcall(function() --uncomment me when i'm working right!
+            if holo then holo.clear() end
             depropagateInformation()
             setStatus("WORKING", 0xf2ff00)
             CC.beep(400, 1)
@@ -164,7 +171,7 @@ repeat
             local lineLen = io.read("*l").len() --unit length of one line used for fs:seek parameter.
             io.flush()
             local currX = 1;local currY = 1
-            local printX = 3; local printY = 3
+            local printX = 1; local printY = 3
             local baseX = printX;local baseY = printY
             local width = tonumber(io.open("settings/scanW.cf"):read("*a"));io.flush() -- possible breakpoints; can i read directly from an io.open or does it need to be localized?
             local depth = tonumber(io.open("settings/scanD.cf"):read("*a"));io.flush()
@@ -230,11 +237,13 @@ repeat
                 end
             end
             io.flush()
-            setStatus("READY; PRESS ENTER", 0xf2ff00)
+            setStatus("COMPARING", 0xf2ff00)
+            comparing = true
             CC.beep(700, .75)
             coroutine.resume(coroutine.create(function()) -- possible breakpoint
                 io.read("*l")
                 propagateInformation()
+                comparing = false
                 setStatus("READY", 0xf2ff00)
             end)
         end)
@@ -272,7 +281,50 @@ repeat
             CC.beep(700, .75)
         end)
         if not success then setStatus("ERROR; PRESS ENTER", 0xFF0000);needsRestart = true end
-    end -- use an elseif here to analyze specifics when columns are pressed
+    elseif comparing then
+        io.flush()
+        local discrep = io.open("/geoinfo/discrep.bdat")
+        local liq = io.read("*l").len()
+        fs:seek("set", (liq * x * (y - 2)))
+        liq = io.read("*l")
+        gpu.setForeground(0xffffff)
+        for i,v in pairs(serial.unserialize(liq)) do -- values are stored from the bottom up
+            if v > 0 then -- discrep; softer
+                gpu.setBackground(0xff0000)
+                if v >= 10 then
+                    gpu.set(2, resY - i, ">")
+                else
+                    gpu.set(2, resY - i, tostring(v[0]))
+                end
+                if holo then
+                    holo.clear()
+                    for ZZ=v do
+                        holo.set(1, holoResY - i, ZZ, 0)
+                    end
+                end
+            elseif v == 0 then -- no discrep
+                gpu.setBackground(0x00ff00)
+                gpu.set(2, resY - i, " ")
+                if holo then
+                    holo.clear()
+                    holo.set(1, holoResY - i, 1, 1)
+                end
+            else -- discrep; harder
+                gpu.setBackground(0x0000ff)
+                if v <= -10 then
+                    gpu.set(2, resY - i, ">")
+                else
+                    gpu.set(2, resY - i, tostring(-v[0]))
+                end
+                if holo then
+                    holo.clear()
+                    for ZZ=-v do
+                        holo.set(1, holoResY - i, ZZ, 2)
+                    end
+                end
+            end
+        end
+    end
 until needsRestart
 io.flush()
 local corbeep = coroutine.create(function()
@@ -287,4 +339,5 @@ coroutine.resume(corbeep)
 io.read("*l") -- wait for enter pressed
 coroutine.close(corbeep)
 term.clear() -- clear program
+holo.clear()
 print("GEOSEC exited with code " .. exitCode .. "; error.\nDiagnose by removing pcall safeguard from section you were using, replicating conditions, & observing issue at root.")

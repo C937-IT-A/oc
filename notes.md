@@ -16,3 +16,5 @@ requires non-monochrome graphics & screen
 works best at high resolution
 
 when finished remove whitespace for omptimization as readability is no longer an issue
+
+this will not fully work for an area larger than the screen resolution; ability to view differences dependent. may need to run multiple computers with this program to cover a very large area
