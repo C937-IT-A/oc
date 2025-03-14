@@ -55,8 +55,8 @@ local holo -- optional!
 if comp.isAvailable("hologram") then holo = comp.hologram else holo = nil end
 local holoResX, holoResY
 if holo then print("Hologram found") else print("Optional hologram not found") end
-if holo then holoResX, holoResY = holo.getScale(); holo.clear() end -- possible breakpoint
-if holo then holo.setPaletteColor(0, 0xff0000); holo.setPaletteColor(1, 0x00ff00); holo.setPaletteColor(2, 0x0000ff) end
+if holo then holoResX, holoResY = holo.getScale(); holo.clear() end
+-- if holo then holo.setPaletteColor(0, 0xff0000); holo.setPaletteColor(1, 0x00ff00); holo.setPaletteColor(2, 0x0000ff) end
 
 os.sleep(.25)
 term.clear()
