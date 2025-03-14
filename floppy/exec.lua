@@ -155,13 +155,13 @@ repeat
             io.flush()
             setStatus("READY; PRESS ENTER", 0xf2ff00)
             CC.beep(700, .75)
-            coroutine.resume(coroutine.create(function()) -- possible breakpoint
+            coroutine.resume(coroutine.create(function() -- definite breakpoint
                 io.read("*l")
                 propagateInformation()
                 setStatus("READY", 0x00ff00)
-            end)
+            end))
         end)
-        if not success then setStatus("ERROR; PRESS ENTER", 0xFF0000);needsRestart = true end
+        if not success then setStatus("ERROR; SHUT DOWN", 0xFF0000);needsRestart = true end
     elseif x == compLocX and y == compLocY then
         -- requested compare
         local success = pcall(function() --uncomment me when i'm working right!
@@ -170,13 +170,13 @@ repeat
             setStatus("WORKING", 0xf2ff00)
             CC.beep(400, 1)
             if not fs.exists("/geoinfo/lastScan.bdat") then
-                setStatus("ERROR; PRESS ENTER", 0xFF0000)
+                setStatus("ERROR; SHUT DOWN", 0xFF0000)
                 exitCode = "2"
                 needsRestart = true
                 break
             end
             if not fs.exists("/geoinfo/statusQuo.bdat") then
-                setStatus("ERROR; PRESS ENTER", 0xFF0000)
+                setStatus("ERROR; SHUT DOWN", 0xFF0000)
                 exitCode = "2"
                 needsRestart = true
                 break
@@ -264,7 +264,7 @@ repeat
                 setStatus("READY", 0x00ff00)
             end)
         end)
-        if not success then setStatus("ERROR; PRESS ENTER", 0xFF0000);needsRestart = true end
+        if not success then setStatus("ERROR; SHUT DOWN", 0xFF0000);needsRestart = true end
     elseif x == sqLocX and y == sqLocY then
         -- requested set SQ
         local success = pcall(function() --uncomment me when i'm working right!
@@ -275,7 +275,7 @@ repeat
             if fs.exists("/geoinfo/lastScan.bdat") then
                 gpu.set(3, 3, "Found lastScan.bdat")
             else
-                setStatus("ERROR; PRESS ENTER", 0xFF0000)
+                setStatus("ERROR; SHUT DOWN", 0xFF0000)
                 exitCode = "2"
                 needsRestart = true
                 break
@@ -283,7 +283,7 @@ repeat
             if fs.exists("/geoinfo/statusQuo.bdat") then
                 gpu.set(3, 4, "Found statusQuo.bdat")
             else
-                setStatus("ERROR; PRESS ENTER", 0xFF0000)
+                setStatus("ERROR; SHUT DOWN", 0xFF0000)
                 exitCode = "2"
                 needsRestart = true
                 break
@@ -297,7 +297,7 @@ repeat
             setStatus("READY", 0x00ff0e)
             CC.beep(700, .75)
         end)
-        if not success then setStatus("ERROR; PRESS ENTER", 0xFF0000);needsRestart = true end
+        if not success then setStatus("ERROR; SHUT DOWN", 0xFF0000);needsRestart = true end
     elseif comparing then
         io.flush()
         local discrep = io.open("/geoinfo/discrep.bdat")
