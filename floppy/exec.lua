@@ -100,7 +100,7 @@ local function setStatus(status, clr) -- sets status message
     gpu.setForeground(prevFRG)
 end
 
-setStatus("READY", 0xf2ff00)
+setStatus("READY", 0x00ff00)
 
 -- MAIN --
 
@@ -158,7 +158,7 @@ repeat
             coroutine.resume(coroutine.create(function()) -- possible breakpoint
                 io.read("*l")
                 propagateInformation()
-                setStatus("READY", 0xf2ff00)
+                setStatus("READY", 0x00ff00)
             end)
         end)
         if not success then setStatus("ERROR; PRESS ENTER", 0xFF0000);needsRestart = true end
@@ -261,7 +261,7 @@ repeat
                 io.read("*l")
                 propagateInformation()
                 comparing = false
-                setStatus("READY", 0xf2ff00)
+                setStatus("READY", 0x00ff00)
             end)
         end)
         if not success then setStatus("ERROR; PRESS ENTER", 0xFF0000);needsRestart = true end
