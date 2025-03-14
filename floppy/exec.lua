@@ -140,7 +140,7 @@ repeat
                 for i,v in pairs(columnData) do
                     columnData[i] = tonumber(string.sub(tostring(v), 1, 3))
                 end
-                lSF:write(serial.serialize(columnData))
+                lSF:write(serial.serialize(columnData) .. "\n")
                 gpu.setBackground(0xf2ff00)
                 gpu.set(currX, currZ + 2, " ")
                 if currX >= width then
@@ -234,7 +234,7 @@ repeat
                     gpu.set(printX, printY, " ")
                 end
                 discrep = io.open("/geoinfo/discrep.bdat", "w")
-                discrep:write(serial.serialize(diff))
+                discrep:write(serial.serialize(diff) .. "\n")
                 io.flush()
                 --so... okay.
                 --the discrep file stores column data in (X by Y in i) format. first line
