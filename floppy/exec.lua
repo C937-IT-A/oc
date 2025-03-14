@@ -140,7 +140,7 @@ repeat
                 local columnData = geo.scan(offX + currX, offZ + currZ, offY, 1, 1, height)
                 lSF:write(serial.serialize(columnData))
                 gpu.setBackground(0xf2ff00)
-                gpu.set(currX, currZ, " ")
+                gpu.set(currX, currZ + 2, " ")
                 if currX >= width then
                     if currZ < depth then
                         currZ = currZ + 1
