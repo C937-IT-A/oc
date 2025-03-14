@@ -137,7 +137,7 @@ repeat
 
             repeat -- possible breakpoint; RAM allocation. might require a whole-ass server... actually that seems reasonable. scalability issues but whaddeva!
                 local columnData = geo.scan(offX + currX, offZ + currZ, offY, 1, 1, height)
-                for _,v in pairs(columnData) do
+                for i,v in pairs(columnData) do
                     columnData[i] = tonumber(string.sub(tostring(v), 1, 3))
                 end
                 lSF:write(serial.serialize(columnData))
