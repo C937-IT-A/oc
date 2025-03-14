@@ -21,10 +21,25 @@ term.clear()
 local success = pcall(function() gpu.setDepth(8) end)
 if not success then success = pcall(function() gpu.setDepth(4) end) end
 if not success then error("Your system's specifications do not meet the minimum GPU requirements: 4-bit color depth") end -- terminate program if monochrome
-gpu.setForeground(0xffee00)
+gpu.setForeground(0xffff00)
 print("Color depth verified")
 
+if gpu.getDepth() ~= gpu.maxDepth() then
+    print("Your GPU's color depth is not at its maximum. Set this option? (Y/N)")
+    local choice = io.read("*l").lower()[0]
+    if choice == "y" then
+        gpu.setDepth(gpu.maxDepth())
+    end
+end
+
 -- determine GPU resolution for rendering calculations
+if gpu.getResolution() ~= gpu.maxResolution() then
+    print("Your GPU's resolution is not at its maximum. Set this option? (Y/N)")
+    local choice = io.read("*l").lower()[0]
+    if choice == "y" then
+        gpu.setResolution(gpu.maxResolution())
+    end
+end
 local resX, resY = gpu.getResolution()
 print("GPU resolution found")
 
@@ -299,7 +314,11 @@ repeat
                 if holo then
                     holo.clear()
                     for ZZ=v do
-                        holo.set(1, holoResY - i, ZZ, 0)
+                        if ZZ > 48 then
+                            holo.set(2, holoResY - i, ZZ - 48, 0)
+                        else
+                            holo.set(1, holoResY - i, ZZ, 0)
+                        end
                     end
                 end
             elseif v == 0 then -- no discrep
@@ -318,8 +337,12 @@ repeat
                 end
                 if holo then
                     holo.clear()
-                    for ZZ=-v do
-                        holo.set(1, holoResY - i, ZZ, 2)
+                    for ZZ=v do
+                        if ZZ > 48 then
+                            holo.set(2, holoResY - i, ZZ - 48, 0)
+                        else
+                            holo.set(1, holoResY - i, ZZ, 0)
+                        end
                     end
                 end
             end
