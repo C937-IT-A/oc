@@ -111,7 +111,7 @@ repeat
         depropagateInformation()
         gpu.setBackground(0x000000)
         gpu.setForeground(0xffffff)
-        CC.beep(800, .5);os.sleep(.5);CC.beep(600, .5);os.sleep(.5);CC.beep(400, .5)
+        CC.beep(800, .25);CC.beep(600, .25);CC.beep(400, .25)
         term.clear()
         if holo then holo.clear() end
         print("Exited GEOSEC with code 0; successful user-initiated shutdown.")
