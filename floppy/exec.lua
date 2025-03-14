@@ -161,7 +161,7 @@ repeat
                 io.read("*l")
                 propagateInformation()
                 setStatus("READY", 0x00ff00)
-            end)
+            end))
         end)
         if not success then setStatus("ERROR; SHUT DOWN", 0xFF0000);needsRestart = true end
     elseif x == compLocX and y == compLocY then
@@ -259,12 +259,12 @@ repeat
             setStatus("COMPARING", 0xf2ff00)
             comparing = true
             CC.beep(700, .75)
-            coroutine.resume(coroutine.create(function()) -- possible breakpoint
+            coroutine.resume(coroutine.create(function() -- possible breakpoint
                 io.read("*l")
                 propagateInformation()
                 comparing = false
                 setStatus("READY", 0x00ff00)
-            end)
+            end))
         end)
         if not success then setStatus("ERROR; SHUT DOWN", 0xFF0000);needsRestart = true end
     elseif x == sqLocX and y == sqLocY then
