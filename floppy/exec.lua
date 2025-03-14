@@ -65,7 +65,7 @@ term.clear()
 gpu.setBackground(0xacedff)
 gpu.fill(1, 1, resX, resY, " ") -- main area
 local function propagateInformation()
-    gpu.setbackground(0xd6d6d6)
+    gpu.setBackground(0xd6d6d6)
     gpu.setForeground(0x000000)
     gpu.fill(1, 1, resX, 2, " ") -- toolbar
     gpu.set(1, 1, "GEOLOGICAL SECURITY APPLICATION") -- title
