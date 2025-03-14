@@ -352,17 +352,9 @@ repeat
     end
 until needsRestart
 io.flush()
-local corbeep = coroutine.create(function()
-    repeat
-        CC.beep(1000, .5)
-        os.sleep(.5)
-        CC.beep(1200, .5)
-        os.sleep(.5)
-    until nil
-end)
-coroutine.resume(corbeep)
-io.read("*l") -- wait for enter pressed
-coroutine.close(corbeep)
-term.clear() -- clear program
-holo.clear()
-print("GEOSEC exited with code " .. exitCode .. "; error.\nDiagnose by removing pcall safeguard from section you were using, replicating conditions, & observing issue at root.")
+repeat
+    CC.beep(1000, .5)
+    os.sleep(.5)
+    CC.beep(1200, .5)
+    os.sleep(.5)
+until nil
