@@ -1,7 +1,7 @@
 local fs = require("filesystem")
 
 print("Open (O) or Uninstall (U)")
-local inp = string.lower(io.read("*l")).sub(1,1)
+local inp = string.lower(io.read("*l"))[0]
 if inp == "o" then
     os.execute("/geolib/exec.lua")
 elseif inp == "u" then
