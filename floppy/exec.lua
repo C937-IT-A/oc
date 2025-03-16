@@ -183,29 +183,34 @@ repeat
                 needsRestart = true
                 break
             end
+            if not fs.exists("/geoinfo/discrep.bdat") then
+                setStatus("ERROR; SHUT DOWN", 0xFF0000)
+                exitCode = "2"
+                needsRestart = true
+                break
+            end
             local lastScan = io.open("/geoinfo/lastScan.bdat") --last scan made, read
             local statusQuo --scan considered the normal state, read
             local discrep --stores mathematical difference between the two files, append
             local sQlS;local lSlS
             local lineLen = string.len(io.read("*l")) --unit length of one line used for fs:seek parameter.
             io.flush()
+            lastScan:close()
             local currX = 1;local currY = 1
             local printX = 1; local printY = 3
             local baseX = printX;local baseY = printY
             local width = tonumber(io.open("settings/scanW.cf"):read("*a"));io.flush() -- possible breakpoints; can i read directly from an io.open or does it need to be localized?
             local depth = tonumber(io.open("settings/scanD.cf"):read("*a"));io.flush()
             
-            lastScan = io.open("/geoinfo/lastScan.bdat")
-            
             for line in lastScan:lines() do -- possible breakpoint; RAM allocation. might require a whole-ass server... actually that seems reasonable. scalability issues but whaddeva!
                 lastScan = io.open("/geoinfo/lastScan.bdat")
                 fs:seek("set", (lineLen * line))
                 lSlS = serial.unserialize(io.read("*l"))
-                io.flush()
+                lastScan:close()
                 statusQuo = io.open("/geoinfo/statusQuo.bdat")
                 fs:seek("set", (lineLen * line))
                 sQlS = serial.unserialize(io.read("*l"))
-                io.flush()
+                statusQuo:close()
                 local diff = []
                 local flag = false
                 for i,v in pairs(lSlS) do
@@ -236,6 +241,7 @@ repeat
                 discrep = io.open("/geoinfo/discrep.bdat", "w")
                 discrep:write(serial.serialize(diff) .. "\n")
                 io.flush()
+                discrep:close()
                 --so... okay.
                 --the discrep file stores column data in (X by Y in i) format. first line
                 --is X1Y1i1, second is X2Y1i2, and so on incrementing X until width is reached,
