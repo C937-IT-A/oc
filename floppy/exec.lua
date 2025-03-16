@@ -138,7 +138,17 @@ repeat
             repeat -- possible breakpoint; RAM allocation. might require a whole-ass server... actually that seems reasonable. scalability issues but whaddeva!
                 local columnData = geo.scan(offX + currX, offZ + currZ, offY, 1, 1, height)
                 for i,v in pairs(columnData) do
-                    columnData[i] = tonumber(string.sub(tostring(v), 1, 3))
+                    if string.sub(tostring(v), 3, 3) == "0" then -- truncate scanned information to one decimal place for storage or whole number if no decimal portion
+                        columnData[i] = tonumber(string.sub(tostring(v), 1, 1))
+                    else
+                        columnData[i] = tonumber(string.sub(tostring(v), 1, 3))
+                    end
+                    if columnData[i] == 0 then
+                        columnData[i] = math.abs(columnData[i]) -- replace all instances of -0.0 with 0.0 for storage
+                    end
+                end
+                for i=#columnData,height + 1,-1 do
+                    table.remove(columnData, i)
                 end
                 lSF:write(serial.serialize(columnData) .. "\n")
                 gpu.setBackground(0xf2ff00)
@@ -166,7 +176,7 @@ repeat
         if not success then setStatus("ERROR; SHUT DOWN", 0xFF0000);needsRestart = true end
     elseif x == compLocX and y == compLocY then
         -- requested compare
-        local success = pcall(function() --uncomment me when i'm working right!
+        --local success = pcall(function() --uncomment me when i'm working right!
             if holo then holo.clear() end
             depropagateInformation()
             setStatus("WORKING", 0xf2ff00)
@@ -193,8 +203,7 @@ repeat
             local statusQuo --scan considered the normal state, read
             local discrep --stores mathematical difference between the two files, append
             local sQlS;local lSlS
-            local lineLen = string.len(io.read("*l")) --unit length of one line used for fs:seek parameter.
-            io.flush()
+            local lineLen = string.len(lastScan:read("*l")) --unit length of one line used for fs:seek parameter.
             lastScan:close()
             local currX = 1;local currY = 1
             local printX = 1; local printY = 3
