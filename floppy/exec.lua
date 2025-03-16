@@ -220,12 +220,19 @@ repeat
                 fs:seek("set", (lineLen * line))
                 sQlS = serial.unserialize(io.read("*l"))
                 statusQuo:close()
-                local diff = []
+                local diff = {}
                 local flag = false
                 for i,v in pairs(lSlS) do
-                    if sQlS[i] - v > 0 then flag = "lR" elseif sQlS[i] - v < 0 then if flag ~= "lR" then flag = "hR" end end
-                    table.insert(diff, sQlS[i] - v)
-                    if v <= 0 and sQlS[i] - v ~= 0 then flag = "AIR" end
+                    local lDiff = sQlS[i] - v
+                    if lDiff > 0 then
+                        flag = "lR"
+                    elseif lDiff < 0 then
+                        if flag ~= "lR" then
+                            flag = "hR"
+                        end
+                    end
+                    table.insert(diff, lDiff)
+                    if v <= 0 and lDiff ~= 0 then flag = "AIR" end
                 end
                 if flag then
                     -- discrepancy in current column
@@ -247,6 +254,7 @@ repeat
                     gpu.setBackground(0xFFFFFF)
                     gpu.set(printX, printY, " ")
                 end
+                -- problems \/
                 discrep = io.open("/geoinfo/discrep.bdat", "w")
                 discrep:write(serial.serialize(diff) .. "\n")
                 io.flush()
@@ -280,8 +288,8 @@ repeat
                 comparing = false
                 setStatus("READY", 0x00ff00)
             end))
-        end)
-        if not success then setStatus("ERROR; SHUT DOWN", 0xFF0000);needsRestart = true end
+        --end)
+        --if not success then setStatus("ERROR; SHUT DOWN", 0xFF0000);needsRestart = true end
     elseif x == sqLocX and y == sqLocY then
         -- requested set SQ
         local success = pcall(function() --uncomment me when i'm working right!
